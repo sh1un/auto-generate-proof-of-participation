@@ -1,5 +1,4 @@
 import os
-
 import fitz  # PyMuPDF
 import pandas as pd
 
@@ -14,6 +13,9 @@ participants_df = pd.read_excel("test回饋表單NTNUxAWS.xlsx", sheet_name="she
 # PDF template path
 template_pdf_path = "[template] AWS Educate certificate_FCU.pdf"
 
+# Font file path
+font_file_path = os.path.join(os.path.dirname(__file__), "fonts", "msjh.ttf")
+
 # Iterate through each participant
 for index, row in participants_df.iterrows():
     # Open the PDF template
@@ -22,23 +24,35 @@ for index, row in participants_df.iterrows():
     page = doc[0]
     # Define text style
     text = row["您的姓名"]  # Name read from Excel
-    font_size = 36
+    font_size = 32
     font_color = (0, 0, 0)  # Black
-    x_coord = 440  # Horizontal position, needs adjustment
-    y_coord = 250  # Vertical position, needs adjustment
 
-    # Insert text
-    # Note: This assumes you have a font file that supports Chinese characters
-    # If your PDF template requires a specific font to support Chinese, you should specify the `fontfile` parameter
-    page.insert_text(
-        (x_coord, y_coord),
-        text,
-        fontsize=font_size,
-        fontfile="C:\\Windows\\Fonts\\msjh.ttf",
-        fontname="china-ts",
-        color=font_color,
-        encoding=0,
-    )
+    # Define the position and size of the text box
+    x_coord = 350  # Horizontal position
+    y_coord = 210  # Vertical position
+    rect = fitz.Rect(x_coord, y_coord, x_coord + 300, y_coord + 300)
+
+    # Choose the font based on the text content
+    if all(ord(char) < 128 for char in text):  # If the text is all English characters
+        page.insert_textbox(
+            rect,
+            text,
+            fontsize=font_size,
+            fontfile=font_file_path,
+            color=font_color,
+            align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
+            overlay=True,
+        )
+    else:  # If the text contains Chinese characters
+        page.insert_textbox(
+            rect,
+            text,
+            fontsize=font_size,
+            fontname="china-t",
+            color=font_color,
+            align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
+            overlay=True,
+        )
 
     # Define the output PDF file path
     output_pdf_path = os.path.join(
