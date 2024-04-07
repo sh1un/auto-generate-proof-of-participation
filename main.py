@@ -1,6 +1,11 @@
 import os
+
 import fitz  # PyMuPDF
 import pandas as pd
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Ensure the results directory exists
 results_dir = "results"
@@ -8,13 +13,18 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
 # Read the participants list
-participants_df = pd.read_excel("test回饋表單NTNUxAWS.xlsx", sheet_name="sheet1")
+participants_file = os.environ.get("PARTICIPANTS_FILE")
+participants_sheet = os.environ.get("PARTICIPANTS_SHEET")
+participant_name_column = os.environ.get("PARTICIPANT_NAME_COLUMN")
+participants_df = pd.read_excel(participants_file, sheet_name=participants_sheet)
 
 # PDF template path
-template_pdf_path = "[template] AWS Educate certificate_FCU.pdf"
+template_pdf_path = os.environ.get("TEMPLATE_PDF_PATH")
 
 # Font file path
-font_file_path = os.path.join(os.path.dirname(__file__), "fonts", "msjh.ttf")
+font_file_path = os.path.join(
+    os.path.dirname(__file__), os.environ.get("FONT_FILE_PATH")
+)
 
 # Iterate through each participant
 for index, row in participants_df.iterrows():
@@ -23,7 +33,7 @@ for index, row in participants_df.iterrows():
     # Assuming the template has only one page
     page = doc[0]
     # Define text style
-    text = row["您的姓名"]  # Name read from Excel
+    text = row[participant_name_column]  # Name read from Excel
     font_size = 32
     font_color = (0, 0, 0)  # Black
 
@@ -56,11 +66,12 @@ for index, row in participants_df.iterrows():
 
     # Define the output PDF file path
     output_pdf_path = os.path.join(
-        results_dir, f'certificate_{index+1}_{row["您的姓名"]}.pdf'
+        results_dir, f"certificate_{index+1}_{row[participant_name_column]}.pdf"
     )
 
     # Save the modified PDF
     doc.save(output_pdf_path)
+
     # Close the document
     doc.close()
 
