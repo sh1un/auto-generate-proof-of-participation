@@ -13,18 +13,16 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
 # Read the participants list
-participants_file = os.environ.get("PARTICIPANTS_FILE")
-participants_sheet = os.environ.get("PARTICIPANTS_SHEET")
-participant_name_column = os.environ.get("PARTICIPANT_NAME_COLUMN")
+participants_file = "FCUxUAD 出席名單(1).xlsx"
+participants_sheet = "清單"
+participant_name_column = "姓名"
 participants_df = pd.read_excel(participants_file, sheet_name=participants_sheet)
 
 # PDF template path
-template_pdf_path = os.environ.get("TEMPLATE_PDF_PATH")
+template_pdf_path = "[template] AWS Educate certificate_FCU.pdf"
 
 # Font file path
-font_file_path = os.path.join(
-    os.path.dirname(__file__), os.environ.get("FONT_FILE_PATH")
-)
+font_file_path = os.path.join(os.path.dirname(__file__), "fonts/msjh.ttf")
 
 # Iterate through each participant
 for index, row in participants_df.iterrows():
