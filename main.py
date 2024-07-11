@@ -28,9 +28,11 @@ TEMPLATE_PDF_PATH = "[template] AWS Educate certificate_FCU-Amazon Ember.pdf"
 
 # Font file path
 font_file_path_english = os.path.join(
-    os.path.dirname(__file__), "fonts/Ember/AmazonEmber-Rg.ttf"
+    os.path.dirname(__file__), "fonts/Ember/AmazonEmber_Rg.ttf"
 )
-font_file_path_chinese = os.path.join(os.path.dirname(__file__), "fonts/msjh.ttf")
+font_file_path_chinese = os.path.join(
+    os.path.dirname(__file__), "fonts/static/NotoSansTC-Regular.ttf"
+)
 
 # Iterate through each participant
 for index, row in participants_df.iterrows():
@@ -38,6 +40,7 @@ for index, row in participants_df.iterrows():
     doc = fitz.open(TEMPLATE_PDF_PATH)
     # Assuming the template has only one page
     page = doc[0]
+
     # Define text style
     name_text = row[PARTICIPANT_NAME_COLUMN]  # Name read from Excel
     event_text = f"in recognition of your participation in the {row[EVENT_NAME_COLUMN]} on {row[EVENT_DATE_COLUMN]} at {row[EVENT_LOCATION_COLUMN]}."
@@ -49,51 +52,37 @@ for index, row in participants_df.iterrows():
     x_coord_name = 365  # Horizontal position
     y_coord_name = 210  # Vertical position
     rect_name = fitz.Rect(
-        x_coord_name, y_coord_name, x_coord_name + 300, y_coord_name + 300
+        x_coord_name, y_coord_name, x_coord_name + 300, y_coord_name + 50
     )
 
     # Define the position and size of the text box for the event information
     x_coord_event = 250  # Horizontal position
     y_coord_event = 265  # Vertical position
     rect_event = fitz.Rect(
-        x_coord_event, y_coord_event, x_coord_event + 525, y_coord_event + 350
+        x_coord_event, y_coord_event, x_coord_event + 525, y_coord_event + 50
     )
 
-    # Choose the font based on the text content
+    # Use TextWriter to insert text
+    tw = fitz.TextWriter(page.rect)
+
     # Insert the name text
     if all(
         ord(char) < 128 for char in name_text
     ):  # If the text is all English characters
-        page.insert_textbox(
-            rect_name,
-            name_text,
-            fontsize=font_size_name,
-            fontfile=font_file_path_english,
-            color=font_color,
-            align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
-            overlay=True,
-        )
+        font = fitz.Font(fontfile=font_file_path_english)
     else:  # If the text contains Chinese characters
-        page.insert_textbox(
-            rect_name,
-            name_text,
-            fontsize=font_size_name,
-            fontname="china-t",
-            color=font_color,
-            align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
-            overlay=True,
-        )
+        font = fitz.Font(fontfile=font_file_path_chinese)
+
+    tw.fill_textbox(rect_name, name_text, font=font, fontsize=font_size_name, align=1)
 
     # Insert the event information text
-    page.insert_textbox(
-        rect_event,
-        event_text,
-        fontsize=font_size_event,
-        fontfile=font_file_path_english,
-        color=font_color,
-        align=fitz.TEXT_ALIGN_CENTER,
-        overlay=True,
+    font = fitz.Font(fontfile=font_file_path_english)
+    tw.fill_textbox(
+        rect_event, event_text, font=font, fontsize=font_size_event, align=1
     )
+
+    # Write text to the page
+    tw.write_text(page)
 
     # Define the output PDF file path
     output_pdf_path = os.path.join(
