@@ -18,6 +18,9 @@ PARTICIPANTS_FILE = os.environ.get("PARTICIPANTS_FILE")
 print("名單: " + PARTICIPANTS_FILE)
 PARTICIPANTS_SHEET = "清單"
 PARTICIPANT_NAME_COLUMN = "姓名"
+EVENT_NAME_COLUMN = "event_name"
+EVENT_DATE_COLUMN = "event_date"
+EVENT_LOCATION_COLUMN = "event_location"
 participants_df = pd.read_excel(PARTICIPANTS_FILE, sheet_name=PARTICIPANTS_SHEET)
 
 # PDF template path
@@ -25,7 +28,7 @@ TEMPLATE_PDF_PATH = "[template] AWS Educate certificate_FCU-Amazon Ember.pdf"
 
 # Font file path
 font_file_path_english = os.path.join(
-    os.path.dirname(__file__), "fonts/Ember/AmazonEmber-Regular.ttf"
+    os.path.dirname(__file__), "fonts/Ember/AmazonEmber-Rg.ttf"
 )
 font_file_path_chinese = os.path.join(os.path.dirname(__file__), "fonts/msjh.ttf")
 
@@ -36,21 +39,35 @@ for index, row in participants_df.iterrows():
     # Assuming the template has only one page
     page = doc[0]
     # Define text style
-    text = row[PARTICIPANT_NAME_COLUMN]  # Name read from Excel
-    font_size = 32
+    name_text = row[PARTICIPANT_NAME_COLUMN]  # Name read from Excel
+    event_text = f"in recognition of your participation in the {row[EVENT_NAME_COLUMN]} on {row[EVENT_DATE_COLUMN]} at {row[EVENT_LOCATION_COLUMN]}."
+    font_size_name = 32
+    font_size_event = 18
     font_color = (0, 0, 0)  # Black
 
-    # Define the position and size of the text box
-    x_coord = 350  # Horizontal position
-    y_coord = 210  # Vertical position
-    rect = fitz.Rect(x_coord, y_coord, x_coord + 300, y_coord + 300)
+    # Define the position and size of the text box for the name
+    x_coord_name = 365  # Horizontal position
+    y_coord_name = 210  # Vertical position
+    rect_name = fitz.Rect(
+        x_coord_name, y_coord_name, x_coord_name + 300, y_coord_name + 300
+    )
+
+    # Define the position and size of the text box for the event information
+    x_coord_event = 250  # Horizontal position
+    y_coord_event = 265  # Vertical position
+    rect_event = fitz.Rect(
+        x_coord_event, y_coord_event, x_coord_event + 525, y_coord_event + 350
+    )
 
     # Choose the font based on the text content
-    if all(ord(char) < 128 for char in text):  # If the text is all English characters
+    # Insert the name text
+    if all(
+        ord(char) < 128 for char in name_text
+    ):  # If the text is all English characters
         page.insert_textbox(
-            rect,
-            text,
-            fontsize=font_size,
+            rect_name,
+            name_text,
+            fontsize=font_size_name,
             fontfile=font_file_path_english,
             color=font_color,
             align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
@@ -58,14 +75,25 @@ for index, row in participants_df.iterrows():
         )
     else:  # If the text contains Chinese characters
         page.insert_textbox(
-            rect,
-            text,
-            fontsize=font_size,
+            rect_name,
+            name_text,
+            fontsize=font_size_name,
             fontname="china-t",
             color=font_color,
             align=fitz.TEXT_ALIGN_CENTER,  # Set text alignment to center
             overlay=True,
         )
+
+    # Insert the event information text
+    page.insert_textbox(
+        rect_event,
+        event_text,
+        fontsize=font_size_event,
+        fontfile=font_file_path_english,
+        color=font_color,
+        align=fitz.TEXT_ALIGN_CENTER,
+        overlay=True,
+    )
 
     # Define the output PDF file path
     output_pdf_path = os.path.join(
